@@ -15,7 +15,8 @@
         "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/images/ww logo.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.kibeezy.ww"
     },
     "web": {
       "output": "static",
