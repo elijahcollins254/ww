@@ -1,0 +1,80 @@
+import { useCallback, useEffect, useState } from 'react';
+import { router } from 'expo-router';
+import { Text, View } from 'react-native';
+
+import { ActionButton, CustomerScreen, Field, Notice, SectionTitle } from '@/components/customer-ui';
+import { apiRequest, getAuthState } from '@/lib/api';
+import { useAppTheme } from '@/contexts/theme-context';
+
+type BNPLStatus = { is_enrolled: boolean; is_active?: boolean; credit_limit?: number; current_balance?: number; phone_number?: string };
+const cash = (amount = 0) => `KSh ${Number(amount).toLocaleString('en-KE')}`;
+
+export default function BNPLScreen() {
+  const { colors } = useAppTheme();
+  const [status, setStatus] = useState<BNPLStatus | null>(null);
+  const [phone, setPhone] = useState('');
+  const [amount, setAmount] = useState('');
+  const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(true);
+  const refresh = useCallback(async () => {
+    try {
+      const profile = await apiRequest<{ phone?: string }>('/users/me/');
+      setPhone(profile.phone || '');
+      setStatus(await apiRequest<BNPLStatus>('/payments/bnpl/status/'));
+      setError('');
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : 'Unable to load BNPL.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+  useEffect(() => {
+    getAuthState().then((auth) => { if (!auth?.token) router.replace('/login'); else void refresh(); });
+  }, [refresh]);
+  const post = async (path: string, body: Record<string, unknown> = {}) => {
+    setLoading(true);
+    setError('');
+    setMessage('');
+    try {
+      await apiRequest(path, { method: 'POST', body: JSON.stringify(body) });
+      setMessage('Request completed.');
+      await refresh();
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : 'Request failed.');
+      setLoading(false);
+    }
+  };
+
+  return (
+    <CustomerScreen title="Pay over time" subtitle="Manage your BNPL account, available credit and repayments.">
+      {status ? (
+        <View style={{ marginTop: 14, padding: 18, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 5 }}>
+          <Text style={{ color: colors.textSecondary, fontSize: 12 }}>AVAILABLE CREDIT</Text>
+          <Text style={{ marginTop: 4, color: colors.text, fontSize: 27, fontWeight: '900' }}>{cash((status.credit_limit || 0) - (status.current_balance || 0))}</Text>
+          <Text style={{ marginTop: 14, color: colors.textSecondary, fontSize: 12 }}>CURRENT BALANCE</Text>
+          <Text style={{ marginTop: 4, color: colors.text, fontSize: 18, fontWeight: '800' }}>{cash(status.current_balance)}</Text>
+          <Text style={{ marginTop: 10, color: colors.muted, fontSize: 12 }}>{status.is_enrolled ? (status.is_active ? 'Account active' : 'Account inactive') : 'Not enrolled'}</Text>
+        </View>
+      ) : null}
+      {error ? <Notice error>{error}</Notice> : null}
+      {message ? <Notice>{message}</Notice> : null}
+      {status?.is_enrolled ? (
+        <>
+          <SectionTitle>Repay balance</SectionTitle>
+          <Field label="Phone receiving M-Pesa prompt" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
+          <Field label="Amount (leave blank to pay full balance)" value={amount} onChangeText={setAmount} keyboardType="decimal-pad" placeholder={cash(status.current_balance)} />
+          <ActionButton title="Pay with M-Pesa" loading={loading} onPress={() => post('/payments/bnpl/pay_balance/', { phone_number: phone, ...(amount ? { amount: Number(amount) } : {}) })} />
+          <ActionButton title="Leave BNPL" secondary loading={loading} onPress={() => post('/payments/bnpl/opt_out/')} />
+        </>
+      ) : (
+        <>
+          <SectionTitle>Enrollment</SectionTitle>
+          <Field label="Phone number" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
+          <ActionButton title="Enroll in BNPL" loading={loading} onPress={() => post('/payments/bnpl/opt_in/', { phone_number: phone })} />
+        </>
+      )}
+      <ActionButton title="Refresh account" secondary loading={loading} onPress={() => { setLoading(true); void refresh(); }} />
+    </CustomerScreen>
+  );
+}
