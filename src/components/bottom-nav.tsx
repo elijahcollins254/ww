@@ -57,7 +57,7 @@ export default function BottomNav() {
             onPress={() => router.push(destination.path as never)}
             style={({ pressed }) => [styles.item, pressed && styles.pressed]}>
             <View style={styles.iconWrap}>
-              <SymbolView name={destination.icon} tintColor={tintColor} size={22} />
+              <SymbolView name={destination.icon} tintColor={tintColor} size={24} />
               {destination.label === 'Cart' && itemCount > 0 && (
                 <View style={[styles.badge, { backgroundColor: colors.primary }]}>
                   <Text style={styles.badgeText}>{itemCount > 99 ? '99+' : itemCount}</Text>
