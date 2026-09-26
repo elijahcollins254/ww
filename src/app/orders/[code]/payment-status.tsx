@@ -72,7 +72,7 @@ export default function PaymentStatusScreen() {
       ) : loading ? <Notice>Checking payment status…</Notice> : null}
       {message ? <Notice>{message}</Notice> : null}
       <ActionButton title="Refresh status" secondary onPress={() => { setLoading(true); void refresh(); }} loading={loading} />
-      {failed || attempt >= 12 ? <ActionButton title="Try payment again" onPress={() => router.push({ pathname: '/checkout', params: { order_id: code } })} /> : null}
+      {failed || attempt >= 12 ? <ActionButton title="Try payment again" onPress={() => router.push({ pathname: '/checkout', params: { order_id: code, amount: status?.amount ? String(status.amount) : undefined } })} /> : null}
       <ActionButton title="Back to orders" secondary onPress={() => router.replace('/orders')} />
     </CustomerScreen>
   );

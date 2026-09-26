@@ -47,7 +47,8 @@ export default function OrdersScreen() {
           <SectionTitle>Final price</SectionTitle>
           <Text style={{ color: colors.text, fontSize: 18, fontWeight: '900' }}>{price(order.actual_price ?? order.price)}</Text>
           <Text style={{ marginTop: 5, color: order.is_paid ? '#15803D' : colors.muted, fontSize: 12 }}>{order.is_paid ? 'Paid' : 'Awaiting payment'}</Text>
-          <ActionButton title="Order and payment status" secondary onPress={() => router.push(`/orders/${encodeURIComponent(order.code)}/payment-status` as never)} />
+          <ActionButton title="View details" secondary onPress={() => router.push(`/orders/${encodeURIComponent(order.code)}` as never)} />
+          <ActionButton title="Payment status" secondary onPress={() => router.push(`/orders/${encodeURIComponent(order.code)}/payment-status` as never)} />
           {!order.is_paid && order.actual_price != null ? <ActionButton title="Pay now" onPress={() => router.push({ pathname: '/checkout', params: { order_id: order.code, amount: String(order.actual_price) } })} /> : null}
         </View>
       ))}
