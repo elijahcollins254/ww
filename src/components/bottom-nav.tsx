@@ -73,26 +73,26 @@ export default function BottomNav() {
 
 const styles = StyleSheet.create({
   bar: {
-    minHeight: 72,
+    minHeight: 78,
     flexDirection: 'row',
     borderTopWidth: StyleSheet.hairlineWidth,
-    paddingTop: 8,
-    paddingHorizontal: 8,
+    paddingTop: 10,
+    paddingHorizontal: 10,
   },
   item: {
     flex: 1,
     minWidth: 0,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 56,
-    borderRadius: 14,
+    minHeight: 60,
+    borderRadius: 16,
   },
   iconWrap: {
     position: 'relative',
     alignItems: 'center',
     justifyContent: 'center',
-    width: 32,
-    height: 32,
+    width: 36,
+    height: 36,
   },
   badge: {
     position: 'absolute',
