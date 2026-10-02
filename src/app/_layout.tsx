@@ -4,7 +4,6 @@ import * as SplashScreen from 'expo-splash-screen';
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import AppHeader from '@/components/app-header';
 import BottomNav from '@/components/bottom-nav';
-import WhatsAppButton from '@/components/whatsapp-button';
 import { CartProvider } from '@/contexts/cart-context';
 import { ThemePreferenceProvider, useAppTheme } from '@/contexts/theme-context';
 import { StatusBar } from 'expo-status-bar';
@@ -21,7 +20,6 @@ function AppShell() {
     <AppHeader />
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colorScheme === 'dark' ? '#000000' : '#FFFFFF' } }} />
       <BottomNav />
-    <WhatsAppButton />
     </ThemeProvider>
   );
 }

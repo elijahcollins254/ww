@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Alert, Linking, Platform, Pressable, StyleSheet, Text, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { FontAwesome } from '@expo/vector-icons';
 
 const whatsappUrl = 'https://wa.me/254705415948?text=Hi%20Wild%20Wash';
 
@@ -37,7 +38,7 @@ export default function WhatsAppButton() {
         pressed && styles.pressed,
         opening && styles.opening,
       ]}>
-      <Text style={styles.phoneIcon} accessibilityElementsHidden>☎</Text>
+      <FontAwesome name="whatsapp" size={23} color="#FFFFFF" />
       <Text style={styles.label}>WhatsApp</Text>
     </Pressable>
   );
@@ -61,7 +62,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.24,
     shadowRadius: 6,
   },
-  phoneIcon: { color: '#FFFFFF', fontSize: 23, fontWeight: '700' },
   label: { color: '#FFFFFF', fontSize: 14, fontWeight: '800' },
   pressed: { opacity: 0.82, transform: [{ scale: 0.97 }] },
   opening: { opacity: 0.7 },

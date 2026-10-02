@@ -16,6 +16,7 @@ import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/theme';
+import WhatsAppButton from '@/components/whatsapp-button';
 import { useCart } from '@/contexts/cart-context';
 import { useAppTheme } from '@/contexts/theme-context';
 import { API_BASE_URL, fetchServices, getServiceImageUrl, type Service } from '@/lib/api';
@@ -173,6 +174,7 @@ export default function HomeScreen() {
           />
         )}
       </View>
+      <WhatsAppButton />
     </SafeAreaView>
   );
 }
