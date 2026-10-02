@@ -33,7 +33,7 @@ export default function AppHeader() {
     <View style={[styles.header, { paddingTop: insets.top }]}>
       <View style={styles.topBar}>
         <Pressable accessibilityRole="link" accessibilityLabel="Wild Wash home" onPress={() => router.push('/')}>
-          <Image source={require('@/assets/images/ww logo.png')} style={styles.brandMark} contentFit="contain" />
+          <Image source={require('@/assets/images/ww logo.jpg')} style={styles.brandMark} contentFit="contain" />
         </Pressable>
         <Pressable
           accessibilityRole="button"

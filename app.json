@@ -4,24 +4,24 @@
     "slug": "ww",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/ww logo.png",
+    "icon": "./assets/images/ww logo.jpg",
     "scheme": "ww",
     "userInterfaceStyle": "automatic",
     "ios": {
       "bundleIdentifier": "com.kibeezy.ww",
-      "icon": "./assets/images/ww logo.png"
+      "icon": "./assets/images/ww logo.jpg"
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#FFFFFF",
-        "foregroundImage": "./assets/images/ww logo.png"
+        "foregroundImage": "./assets/images/ww logo.jpg"
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.kibeezy.ww"
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/ww logo.png"
+      "favicon": "./assets/images/ww logo.jpg"
     },
     "plugins": [
       "expo-router",
@@ -29,7 +29,7 @@
         "expo-splash-screen",
         {
           "backgroundColor": "#FFFFFF",
-          "image": "./assets/images/ww logo.png",
+          "image": "./assets/images/ww logo.jpg",
           "imageWidth": 128
         }
       ]
