@@ -1,27 +1,27 @@
 {
   "expo": {
-    "name": "Wild Wash",
+    "name": "Wildwash",
     "slug": "ww",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/ww logo.jpg",
+    "icon": "./assets/images/ww logo.png",
     "scheme": "ww",
     "userInterfaceStyle": "automatic",
     "ios": {
       "bundleIdentifier": "com.kibeezy.ww",
-      "icon": "./assets/images/ww logo.jpg"
+      "icon": "./assets/images/ww logo.png"
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#FFFFFF",
-        "foregroundImage": "./assets/images/ww logo.jpg"
+        "foregroundImage": "./assets/images/ww logo.png"
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.kibeezy.ww"
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/ww logo.jpg"
+      "favicon": "./assets/images/ww logo.png"
     },
     "plugins": [
       "expo-router",
@@ -29,7 +29,7 @@
         "expo-splash-screen",
         {
           "backgroundColor": "#FFFFFF",
-          "image": "./assets/images/ww logo.jpg",
+          "image": "./assets/images/ww logo.png",
           "imageWidth": 128
         }
       ]

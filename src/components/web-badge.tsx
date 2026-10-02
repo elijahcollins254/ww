@@ -3,7 +3,7 @@ import { StyleSheet } from 'react-native';
 
 export function WebBadge() {
   return (
-    <Image source={require('@/assets/images/ww logo.jpg')} style={styles.logo} contentFit="contain" />
+    <Image source={require('@/assets/images/ww logo.png')} style={styles.logo} contentFit="contain" />
   );
 }
 

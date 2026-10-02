@@ -45,7 +45,7 @@ export function AnimatedSplashOverlay() {
     <View style={styles.logoWrap}>
       <Image
         style={styles.image}
-        source={require('@/assets/images/ww logo.jpg')}
+        source={require('@/assets/images/ww logo.png')}
         contentFit="contain"
       />
     </View>
@@ -76,7 +76,7 @@ export function AnimatedSplashOverlay() {
 }
 
 export function AnimatedIcon() {
-  return <Image style={styles.image} source={require('@/assets/images/ww logo.jpg')} contentFit="contain" />;
+  return <Image style={styles.image} source={require('@/assets/images/ww logo.png')} contentFit="contain" />;
 }
 
 const styles = StyleSheet.create({
