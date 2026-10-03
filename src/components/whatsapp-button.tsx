@@ -3,7 +3,7 @@ import { Alert, Linking, Platform, Pressable, StyleSheet, Text, useWindowDimensi
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome } from '@expo/vector-icons';
 
-const whatsappUrl = 'https://wa.me/254705415948?text=Hi%20Wild%20Wash';
+const whatsappUrl = 'https://wa.me/254705415948?text=Hi%20Wild%20Wash%20I%20need%20assistance%20with%20my%20order';
 
 export default function WhatsAppButton() {
   const insets = useSafeAreaInsets();
@@ -32,14 +32,14 @@ export default function WhatsAppButton() {
       style={({ pressed }) => [
         styles.button,
         {
-          bottom: desktopWeb ? 20 : Math.max(insets.bottom, 8) + 94,
+          bottom: desktopWeb ? 20 : 12,
           right: Math.max(insets.right, 12) + 16,
         },
         pressed && styles.pressed,
         opening && styles.opening,
       ]}>
       <FontAwesome name="whatsapp" size={23} color="#FFFFFF" />
-      <Text style={styles.label}>WhatsApp</Text>
+      {/* <Text style={styles.label}>WhatsApp</Text> */}
     </Pressable>
   );
 }
