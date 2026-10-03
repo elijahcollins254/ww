@@ -4,6 +4,7 @@ import { Pressable, Text, View } from 'react-native';
 
 import { ActionButton, CustomerScreen, Field, Notice } from '@/components/customer-ui';
 import { apiRequest, saveAuthState, type UserProfile } from '@/lib/api';
+import { getGoogleRedirectPath, signInWithGoogle } from '@/lib/googleAuth';
 import { useAppTheme } from '@/contexts/theme-context';
 
 type Location = { id: number; name: string; description?: string };
@@ -17,6 +18,7 @@ export default function SignupScreen() {
   const [locations, setLocations] = useState<Location[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   useEffect(() => {
     apiRequest<Location[] | { results?: Location[] }>('/users/locations/').then((data) => setLocations(Array.isArray(data) ? data : data.results || [])).catch(() => setLocations([]));
@@ -30,7 +32,7 @@ export default function SignupScreen() {
       await apiRequest('/users/register/', { method: 'POST', body: JSON.stringify({ username, phone, password, location }) });
       const auth = await apiRequest<{ token: string; user: UserProfile }>('/users/login/', { method: 'POST', body: JSON.stringify({ phone, password }) });
       await saveAuthState(auth.token, auth.user);
-      router.replace('/profile');
+      router.replace(getGoogleRedirectPath(auth.user));
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : 'Unable to create your account.');
     } finally {
@@ -38,8 +40,23 @@ export default function SignupScreen() {
     }
   };
 
+  const handleGoogle = async () => {
+    setGoogleLoading(true);
+    setError('');
+    try {
+      const result = await signInWithGoogle();
+      router.replace(getGoogleRedirectPath(result.user));
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : 'Unable to sign up with Google.');
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
   return (
     <CustomerScreen title="Create an account" subtitle="Set up your Wild Wash account to book and track service pickups.">
+      <ActionButton title={googleLoading ? 'Creating account with Google…' : 'Continue with Google'} onPress={() => void handleGoogle()} loading={googleLoading} />
+      <Text style={{ marginTop: 14, color: '#64748B', textAlign: 'center', fontSize: 12, fontWeight: '700' }}>or create account manually</Text>
       <Field label="Username" value={username} onChangeText={setUsername} autoCapitalize="none" placeholder="Choose a username" />
       <Field label="Phone number" value={phone} onChangeText={setPhone} keyboardType="phone-pad" placeholder="0712345678" />
       <Field label="Password" value={password} onChangeText={setPassword} secureTextEntry placeholder="At least 8 characters" />
