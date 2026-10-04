@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { router } from 'expo-router';
 import { CustomerScreen, Field, ActionButton, Notice } from '@/components/customer-ui';
 import { apiRequest } from '@/lib/api';
 
@@ -12,7 +13,7 @@ export default function ResetPasswordScreen() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const run = async (path: string, body: Record<string, string>, next?: Step) => {
+  const run = async (path: string, body: Record<string, string>, next?: Step, onSuccess?: () => void) => {
     setLoading(true);
     setError('');
     setMessage('');
@@ -20,6 +21,7 @@ export default function ResetPasswordScreen() {
       const result = await apiRequest<{ detail?: string }>(path, { method: 'POST', body: JSON.stringify(body) });
       if (next) setStep(next);
       setMessage(result.detail || 'Done.');
+      onSuccess?.();
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : 'The request failed.');
     } finally {
@@ -36,7 +38,7 @@ export default function ResetPasswordScreen() {
       {message ? <Notice>{message}</Notice> : null}
       {step === 'phone' ? <ActionButton title="Send reset code" onPress={() => run('/users/password-reset/request/', { phone }, 'code')} loading={loading} /> : null}
       {step === 'code' ? <ActionButton title="Verify code" onPress={() => run('/users/password-reset/verify/', { phone, code }, 'password')} loading={loading} /> : null}
-      {step === 'password' ? <ActionButton title="Save new password" onPress={() => run('/users/password-reset/confirm/', { phone, code, password })} loading={loading} /> : null}
+      {step === 'password' ? <ActionButton title="Save new password" onPress={() => run('/users/password-reset/confirm/', { phone, code, password }, undefined, () => router.replace('/login'))} loading={loading} /> : null}
       {step !== 'phone' ? <ActionButton title="Back" secondary onPress={() => setStep(step === 'password' ? 'code' : 'phone')} /> : null}
     </CustomerScreen>
   );

@@ -1,4 +1,5 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
+import { Ionicons } from '@expo/vector-icons';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -22,10 +23,26 @@ export function CustomerScreen({ title, subtitle, children }: { title: string; s
 export function Field({ label, ...props }: TextInputProps & { label: string }) {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const isPasswordField = props.secureTextEntry === true;
   return (
     <View style={styles.fieldWrap}>
       <Text style={styles.label}>{label}</Text>
-      <TextInput placeholderTextColor={colors.muted} {...props} style={[styles.input, props.multiline && styles.multiline, props.style]} />
+      {isPasswordField ? (
+        <View style={[styles.input, styles.passwordInputWrap, props.style]}>
+          <TextInput placeholderTextColor={colors.muted} {...props} secureTextEntry={!passwordVisible} style={styles.passwordInput} />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={passwordVisible ? 'Hide password' : 'Show password'}
+            onPress={() => setPasswordVisible(!passwordVisible)}
+            hitSlop={8}
+            style={styles.passwordToggle}>
+            <Ionicons name={passwordVisible ? 'eye-off-outline' : 'eye-outline'} size={20} color={colors.muted} />
+          </Pressable>
+        </View>
+      ) : (
+        <TextInput placeholderTextColor={colors.muted} {...props} style={[styles.input, props.multiline && styles.multiline, props.style]} />
+      )}
     </View>
   );
 }
@@ -61,6 +78,9 @@ function createStyles(colors: (typeof Colors)[keyof typeof Colors]) {
     fieldWrap: { marginTop: 14 },
     label: { marginBottom: 7, color: colors.textSecondary, fontSize: 12, fontWeight: '700' },
     input: { minHeight: 48, paddingHorizontal: 13, paddingVertical: 12, borderWidth: 1, borderColor: colors.border, borderRadius: 6, backgroundColor: colors.backgroundElement, color: colors.text, fontSize: 14 },
+    passwordInputWrap: { flexDirection: 'row', alignItems: 'center' },
+    passwordInput: { flex: 1, minHeight: 46, paddingVertical: 10, color: colors.text, fontSize: 14 },
+    passwordToggle: { width: 36, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
     multiline: { minHeight: 94, textAlignVertical: 'top' },
     button: { minHeight: 48, marginTop: 14, paddingHorizontal: 16, alignItems: 'center', justifyContent: 'center', borderRadius: 5, backgroundColor: colors.primary },
     buttonText: { color: '#FFFFFF', fontSize: 13, fontWeight: '800' },

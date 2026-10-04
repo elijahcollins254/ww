@@ -91,6 +91,17 @@ export default function AppHeader() {
             onPress={closeApps}
             style={styles.outsidePressTarget}
           />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Close apps"
+            accessibilityState={{ expanded: true }}
+            onPress={closeApps}
+            style={[styles.menuButton, styles.modalMenuButton, { top: insets.top + 11 }]}>
+            <View style={styles.gridIcon}>
+              <View style={styles.gridSquare} /><View style={styles.gridSquare} />
+              <View style={styles.gridSquare} /><View style={styles.gridSquare} />
+            </View>
+          </Pressable>
           <Animated.View
             style={[
               styles.appsMenu,
@@ -146,10 +157,11 @@ function createStyles(colors: (typeof Colors)[keyof typeof Colors]) {
   return StyleSheet.create({
     header: { zIndex: 10, backgroundColor: colors.header, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border },
     modalRoot: { flex: 1 },
-    outsidePressTarget: { ...StyleSheet.absoluteFillObject },
+    outsidePressTarget: StyleSheet.absoluteFill,
     topBar: { height: 64, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16 },
     brandMark: { width: 48, height: 48 },
     menuButton: { width: 42, height: 42, justifyContent: 'center', alignItems: 'center', borderRadius: 8 },
+    modalMenuButton: { position: 'absolute', right: 16, zIndex: 2, backgroundColor: colors.header },
     gridIcon: { width: 21, height: 21, flexDirection: 'row', flexWrap: 'wrap', gap: 3 },
     gridSquare: { width: 8, height: 8, borderWidth: 1.5, borderColor: colors.text, borderRadius: 1 },
     appsMenu: { marginHorizontal: 16, marginBottom: 12, padding: 16, backgroundColor: colors.backgroundElement, borderColor: colors.border, borderWidth: 1, borderRadius: 12, elevation: 12 },

@@ -51,7 +51,7 @@ export default function LoginScreen() {
       {error ? <Notice error>{error}</Notice> : null}
       <ActionButton title="Sign in" onPress={submit} loading={loading} />
       <Link href="/reset-password" asChild><Text style={{ marginTop: 18, color: '#E10613', textAlign: 'center', fontWeight: '700' }}>Forgot password?</Text></Link>
-      <Link href="/signup" asChild><Text style={{ marginTop: 14, color: '#64748B', textAlign: 'center' }}>New to Wild Wash? Create an account</Text></Link>
+      <Link href="/signup" asChild><Text style={{ marginTop: 14, color: '#64748B', textAlign: 'center' }}>New to Wild Wash? <Text style={{ color: '#E10613', fontWeight: '800' }}>Create an account</Text></Text></Link>
     </CustomerScreen>
   );
 }

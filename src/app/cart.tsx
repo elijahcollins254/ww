@@ -1,4 +1,5 @@
 import { Link } from 'expo-router';
+import { Image } from 'expo-image';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -27,11 +28,11 @@ export default function CartScreen() {
         {items.length === 0 ? (
           <View style={styles.emptyState}>
             <View style={styles.emptyBadgeWrap}>
-              <View style={styles.emptyMark}><Text style={styles.emptyMarkText}>WW</Text></View>
+              <View style={styles.emptyMark}><Image source={require('@/assets/images/ww logo.png')} style={styles.emptyLogo} contentFit="contain" /></View>
             </View>
             <Text style={styles.emptyTitle}>Nothing in the bag yet</Text>
             <Text style={styles.emptyCopy}>Choose a service and we’ll take it from here.</Text>
-            <Link href="/" asChild>
+            <Link href="/services" asChild>
               <Pressable style={({ pressed }) => [styles.primaryButton, pressed && styles.primaryButtonPressed]}>
                 <Text style={styles.primaryButtonText}>Browse services</Text>
               </Pressable>
@@ -140,7 +141,7 @@ function createStyles(colors: (typeof Colors)[keyof typeof Colors]) {
       backgroundColor: colors.backgroundSelected,
       borderRadius: 48,
     },
-    emptyMarkText: { color: colors.primary, fontSize: 30, fontWeight: '900' },
+    emptyLogo: { width: 76, height: 76 },
     emptyTitle: { marginTop: 4, color: colors.text, fontSize: 22, fontWeight: '800', textAlign: 'center' },
     emptyCopy: { color: colors.muted, fontSize: 14, textAlign: 'center', lineHeight: 20 },
   });

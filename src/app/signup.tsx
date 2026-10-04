@@ -67,7 +67,7 @@ export default function SignupScreen() {
       </View>
       {error ? <Notice error>{error}</Notice> : null}
       <ActionButton title="Create account" onPress={submit} loading={loading} />
-      <Link href="/login" asChild><Text style={{ marginTop: 18, color: '#64748B', textAlign: 'center' }}>Already have an account? Sign in</Text></Link>
+      <Link href="/login" asChild><Text style={{ marginTop: 18, color: '#64748B', textAlign: 'center' }}>Already have an account? <Text style={{ color: colors.primary, fontWeight: '800' }}>Sign in</Text></Text></Link>
     </CustomerScreen>
   );
 }
