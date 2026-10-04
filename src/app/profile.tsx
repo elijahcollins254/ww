@@ -112,6 +112,7 @@ export default function ProfileScreen() {
       <Link href="/offers" asChild><Text style={{ paddingVertical: 13, color: colors.primary, fontWeight: '800' }}>Browse offers</Text></Link>
       <Link href="/loans" asChild><Text style={{ paddingVertical: 13, color: colors.primary, fontWeight: '800' }}>My loan applications</Text></Link>
       <Link href="/tradein" asChild><Text style={{ paddingVertical: 13, color: colors.primary, fontWeight: '800' }}>My trade-ins</Text></Link>
+      <Link href="/privacy" asChild><Text style={{ paddingVertical: 13, color: colors.primary, fontWeight: '800' }}>Privacy Policy</Text></Link>
       <View style={{ height: 1, marginTop: 8, backgroundColor: colors.border }} />
       {profileError ? <Notice error>{profileError}</Notice> : null}
       <SectionTitle>Pickup subscription</SectionTitle>

@@ -32,6 +32,15 @@
           "image": "./assets/images/ww logo.png",
           "imageWidth": 128
         }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableMinifyInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true
+          }
+        }
       ]
     ],
     "experiments": {
