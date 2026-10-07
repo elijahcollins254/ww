@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useLocalSearchParams, router } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 
-import { ActionButton, CustomerScreen, Field, Notice, SectionTitle } from '@/components/customer-ui';
+import { ActionButton, CustomerScreen, Field, Notice, PaymentProgress, SectionTitle, type PaymentSummary } from '@/components/customer-ui';
 import { apiRequest } from '@/lib/api';
 import { useAppTheme } from '@/contexts/theme-context';
 
@@ -11,11 +11,25 @@ const methods: { key: Method; label: string }[] = [
   { key: 'mpesa', label: 'M-Pesa' }, { key: 'bnpl', label: 'BNPL' }, { key: 'tradein', label: 'Trade-in' }, { key: 'gift', label: 'Gift' },
 ];
 
+type OrderSummaryResult = { code: string; payment_summary?: PaymentSummary };
+type OrderSummaryResponse = OrderSummaryResult[] | { results?: OrderSummaryResult[] };
+
+async function getOrderPaymentSummary(code: string) {
+  const result = await apiRequest<OrderSummaryResponse>(`/orders/?code=${encodeURIComponent(code)}`);
+  const orders = Array.isArray(result) ? result : result.results ?? [];
+  const order = orders.find((item) => item.code === code);
+  if (!order?.payment_summary) throw new Error('Could not load this order payment balance.');
+  return { code: order.code, summary: order.payment_summary };
+}
+
 export default function CheckoutScreen() {
   const { colors } = useAppTheme();
-  const params = useLocalSearchParams<{ order_id?: string; amount?: string }>();
+  const params = useLocalSearchParams<{ order_id?: string }>();
   const [orderId, setOrderId] = useState(params.order_id || '');
-  const [amount, setAmount] = useState(params.amount || '');
+  const [amount, setAmount] = useState('');
+  const [paymentSummary, setPaymentSummary] = useState<PaymentSummary | null>(null);
+  const [summaryOrderCode, setSummaryOrderCode] = useState('');
+  const [summaryLoading, setSummaryLoading] = useState(false);
   const [phone, setPhone] = useState('');
   const [method, setMethod] = useState<Method>('mpesa');
   const [tradeDescription, setTradeDescription] = useState('');
@@ -23,16 +37,64 @@ export default function CheckoutScreen() {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const loadOrderBalance = useCallback(async (code: string) => {
+    if (!code.trim()) return;
+    setSummaryLoading(true);
+    setError('');
+    try {
+      const result = await getOrderPaymentSummary(code.trim());
+      setOrderId(result.code);
+      setSummaryOrderCode(result.code);
+      setPaymentSummary(result.summary);
+      setAmount(String(Math.floor(result.summary.payable_amount)));
+    } catch (requestError) {
+      setPaymentSummary(null);
+      setSummaryOrderCode('');
+      setError(requestError instanceof Error ? requestError.message : 'Unable to load the order balance.');
+    } finally {
+      setSummaryLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     apiRequest<{ phone?: string }>('/users/me/').then((user) => setPhone(user.phone || '')).catch(() => undefined);
-  }, []);
+    if (!params.order_id) return;
+
+    let active = true;
+    getOrderPaymentSummary(params.order_id)
+      .then((result) => {
+        if (!active) return;
+        setOrderId(result.code);
+        setSummaryOrderCode(result.code);
+        setPaymentSummary(result.summary);
+        setAmount(String(Math.floor(result.summary.payable_amount)));
+      })
+      .catch((requestError) => {
+        if (!active) return;
+        setError(requestError instanceof Error ? requestError.message : 'Unable to load the order balance.');
+      });
+
+    return () => { active = false; };
+  }, [params.order_id]);
 
   const submit = async () => {
     setError('');
     setMessage('');
     const numericAmount = Number(amount);
     if (!orderId.trim() || !Number.isFinite(numericAmount) || numericAmount <= 0) {
-      setError('An order ID and final price are required.');
+      setError('Enter an order code and a payment amount greater than zero.');
+      return;
+    }
+    if (!paymentSummary || summaryOrderCode !== orderId) {
+      setError('Load the order balance before continuing.');
+      return;
+    }
+    if (numericAmount > paymentSummary.payable_amount) {
+      setError(`Payment cannot exceed the remaining payable amount of KSh ${paymentSummary.payable_amount.toLocaleString('en-KE')}.`);
+      return;
+    }
+    if (method === 'mpesa' && !Number.isInteger(numericAmount)) {
+      setError('M-Pesa payments must be in whole KES amounts.');
       return;
     }
     if (method !== 'gift' && phone.replace(/\D/g, '').length < 10) {
@@ -52,7 +114,7 @@ export default function CheckoutScreen() {
         const available = status.credit_limit - status.current_balance;
         if (numericAmount > available) throw new Error(`The order is above your available credit of KSh ${available.toLocaleString('en-KE')}.`);
         await apiRequest('/payments/bnpl/process/', { method: 'POST', body: JSON.stringify({ order_id: orderId, amount: numericAmount }) });
-        setMessage('BNPL payment applied to your order.');
+        router.replace(`/orders/${encodeURIComponent(orderId)}/payment-status` as never);
         return;
       }
       if (method === 'tradein') {
@@ -70,9 +132,13 @@ export default function CheckoutScreen() {
   };
 
   return (
-    <CustomerScreen title="Checkout" subtitle="Confirm your order amount and choose how you want to pay.">
+    <CustomerScreen title="Checkout" subtitle="Choose an amount to pay now. The final total may change when staff confirms the price.">
       <Field label="Order code" value={orderId} onChangeText={setOrderId} editable={!params.order_id} placeholder="WW-00000" />
-      <Field label="Amount (KES)" value={amount} onChangeText={setAmount} editable={!params.amount} keyboardType="decimal-pad" />
+      {!params.order_id || summaryOrderCode !== orderId ? (
+        <ActionButton title={summaryLoading ? 'Loading balance' : 'Load order balance'} secondary onPress={() => void loadOrderBalance(orderId)} loading={summaryLoading} disabled={!orderId.trim()} />
+      ) : null}
+      <Field label="Pay now (KES)" value={amount} onChangeText={setAmount} keyboardType="decimal-pad" editable={!summaryLoading && Boolean(paymentSummary)} />
+      {paymentSummary ? <PaymentProgress summary={paymentSummary} /> : null}
       <Field label="Phone number" value={phone} onChangeText={setPhone} keyboardType="phone-pad" placeholder="0712345678" />
       <SectionTitle>Payment method</SectionTitle>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 9 }}>
@@ -82,7 +148,7 @@ export default function CheckoutScreen() {
       {method === 'bnpl' ? <Notice>BNPL requires an active account and enough available credit. Manage enrollment in your profile.</Notice> : null}
       {error ? <Notice error>{error}</Notice> : null}
       {message ? <Notice>{message}</Notice> : null}
-      <ActionButton title={method === 'mpesa' ? 'Send M-Pesa prompt' : method === 'bnpl' ? 'Pay with BNPL' : method === 'tradein' ? 'Submit trade-in' : 'Continue with gift'} onPress={submit} loading={loading} />
+      <ActionButton title={method === 'mpesa' ? 'Send M-Pesa prompt' : method === 'bnpl' ? 'Pay with BNPL' : method === 'tradein' ? 'Submit trade-in' : 'Continue with gift'} onPress={submit} loading={loading} disabled={!paymentSummary || summaryOrderCode !== orderId || paymentSummary.payable_amount <= 0} />
       <ActionButton title="Back to orders" secondary onPress={() => router.push('/orders')} />
     </CustomerScreen>
   );

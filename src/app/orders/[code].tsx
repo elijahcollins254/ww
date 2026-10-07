@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, router, useLocalSearchParams } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { ActionButton, CustomerScreen, Notice, SectionTitle } from '@/components/customer-ui';
+import { ActionButton, CustomerScreen, Notice, PaymentProgress, SectionTitle, type PaymentSummary } from '@/components/customer-ui';
 import { apiRequest } from '@/lib/api';
 import { useAppTheme } from '@/contexts/theme-context';
 
@@ -15,6 +15,7 @@ type OrderDetail = {
   price?: number | string | null;
   actual_price?: number | string | null;
   is_paid?: boolean;
+  payment_summary?: PaymentSummary;
   payment_method?: string | null;
   pickup_address?: string | null;
   dropoff_address?: string | null;
@@ -39,10 +40,8 @@ export default function OrderDetailScreen() {
 
   const loadOrder = useCallback(async () => {
     if (!code) return;
-    setLoading(true);
-    setError('');
     try {
-      const result = await apiRequest<OrderDetail | { results?: OrderDetail[] }>(`/orders/?code=${encodeURIComponent(code)}`);
+      const result = await apiRequest<OrderDetail[] | { results?: OrderDetail[] }>(`/orders/?code=${encodeURIComponent(code)}`);
       const list = Array.isArray(result) ? result : result.results ?? [];
       const match = list.find((item) => item.code === code || item.id === Number(code));
       if (!match) {
@@ -57,7 +56,8 @@ export default function OrderDetailScreen() {
   }, [code]);
 
   useEffect(() => {
-    void loadOrder();
+    const timer = setTimeout(() => { void loadOrder(); }, 0);
+    return () => clearTimeout(timer);
   }, [loadOrder]);
 
   if (loading) {
@@ -93,8 +93,20 @@ export default function OrderDetailScreen() {
           <View style={styles.row}><Text style={styles.label}>Service</Text><Text style={styles.value}>{order.service_name || 'Wild Wash service'}</Text></View>
           <View style={styles.row}><Text style={styles.label}>Package</Text><Text style={styles.value}>{order.package || 'Standard'}</Text></View>
           <View style={styles.row}><Text style={styles.label}>Items</Text><Text style={styles.value}>{order.quantity ?? 1}</Text></View>
-          <View style={styles.row}><Text style={styles.label}>Final price</Text><Text style={styles.value}>{money(finalPrice)}</Text></View>
-          <View style={styles.row}><Text style={styles.label}>Payment</Text><Text style={styles.value}>{order.is_paid ? 'Paid' : 'Awaiting payment'}</Text></View>
+          <View style={styles.row}><Text style={styles.label}>{order.payment_summary?.price_finalized ? 'Final price' : 'Estimated price'}</Text><Text style={styles.value}>{money(finalPrice)}</Text></View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Payment</Text>
+            <Text style={styles.value}>
+              {order.is_paid
+                ? 'Paid'
+                : order.payment_summary?.payable_amount === 0 && !order.payment_summary.price_finalized
+                  ? 'Estimate covered; final price pending'
+                  : (order.payment_summary?.paid_amount ?? 0) > 0
+                    ? 'Partially paid'
+                    : 'Awaiting payment'}
+            </Text>
+          </View>
+          {order.payment_summary ? <PaymentProgress summary={order.payment_summary} /> : null}
         </View>
 
         <View style={styles.card}>
@@ -112,8 +124,11 @@ export default function OrderDetailScreen() {
         ) : null}
 
         <View style={styles.actions}>
-          {!order.is_paid ? (
-            <ActionButton title="Proceed to checkout" onPress={() => router.push({ pathname: '/checkout', params: { order_id: String(order.code), amount: String(finalPrice ?? '') } })} />
+          {!order.is_paid && (order.payment_summary?.payable_amount ?? 0) > 0 ? (
+            <ActionButton title="Proceed to checkout" onPress={() => router.push({ pathname: '/checkout', params: { order_id: String(order.code) } })} />
+          ) : null}
+          {!order.is_paid && order.payment_summary?.payable_amount === 0 && !order.payment_summary.price_finalized ? (
+            <Notice>The estimate is covered. Staff will confirm the final total.</Notice>
           ) : null}
           <ActionButton title="Payment status" secondary onPress={() => router.push(`/orders/${encodeURIComponent(String(order.code))}/payment-status` as never)} />
           <Link href="/orders" asChild>

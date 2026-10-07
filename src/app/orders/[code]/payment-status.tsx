@@ -2,11 +2,11 @@ import { useCallback, useEffect, useState } from 'react';
 import { useLocalSearchParams, router } from 'expo-router';
 import { Text, View } from 'react-native';
 
-import { ActionButton, CustomerScreen, Notice, SectionTitle } from '@/components/customer-ui';
+import { ActionButton, CustomerScreen, Notice, PaymentProgress, SectionTitle, type PaymentSummary } from '@/components/customer-ui';
 import { apiRequest } from '@/lib/api';
 import { useAppTheme } from '@/contexts/theme-context';
 
-type PaymentStatus = { status: string; message?: string; checkout_request_id?: string; order_id?: string; amount?: number; delivery_requested?: boolean };
+type PaymentStatus = { status: string; message?: string; checkout_request_id?: string; order_id?: string; amount?: number; delivery_requested?: boolean; payment_summary?: PaymentSummary };
 
 export default function PaymentStatusScreen() {
   const { code } = useLocalSearchParams<{ code: string }>();
@@ -54,9 +54,10 @@ export default function PaymentStatusScreen() {
   };
   const complete = status?.status === 'success' || status?.status === 'completed';
   const failed = status?.status === 'failed';
+  const fullyPaid = Boolean(complete && status?.payment_summary?.price_finalized && status.payment_summary.remaining_amount === 0);
 
   return (
-    <CustomerScreen title={complete ? 'Payment successful' : failed ? 'Payment failed' : 'Payment status'} subtitle={`Order ${code}`}>
+    <CustomerScreen title={complete ? (fullyPaid ? 'Payment successful' : 'Partial payment received') : failed ? 'Payment failed' : 'Payment status'} subtitle={`Order ${code}`}>
       {error ? <Notice error>{error}</Notice> : null}
       {status ? (
         <>
@@ -66,13 +67,20 @@ export default function PaymentStatusScreen() {
             {status.amount != null ? <Text style={{ marginTop: 16, color: colors.text, fontSize: 16, fontWeight: '800' }}>KSh {Number(status.amount).toLocaleString('en-KE')}</Text> : null}
             {status.checkout_request_id ? <Text style={{ marginTop: 7, color: colors.muted, fontSize: 11 }}>Reference: {status.checkout_request_id}</Text> : null}
           </View>
+          {status.payment_summary ? <PaymentProgress summary={status.payment_summary} /> : null}
           {!complete && !failed && attempt < 12 ? <Notice>Check your phone for the M-Pesa prompt and enter your PIN. Status refreshes automatically.</Notice> : null}
-          {complete ? <><SectionTitle>Delivery</SectionTitle><ActionButton title={status.delivery_requested ? 'Rider notified' : 'Request delivery'} onPress={requestDelivery} loading={requestingDelivery} disabled={status.delivery_requested} /></> : null}
+          {fullyPaid ? <><SectionTitle>Delivery</SectionTitle><ActionButton title={status.delivery_requested ? 'Rider notified' : 'Request delivery'} onPress={requestDelivery} loading={requestingDelivery} disabled={status.delivery_requested} /></> : null}
+          {complete && !fullyPaid && (status.payment_summary?.payable_amount ?? 0) > 0 ? (
+            <ActionButton title="Pay remaining balance" onPress={() => router.push({ pathname: '/checkout', params: { order_id: code } })} />
+          ) : null}
+          {complete && !fullyPaid && status.payment_summary?.payable_amount === 0 && !status.payment_summary.price_finalized ? (
+            <Notice>The estimate is covered. Staff will confirm the final total.</Notice>
+          ) : null}
         </>
       ) : loading ? <Notice>Checking payment status…</Notice> : null}
       {message ? <Notice>{message}</Notice> : null}
       <ActionButton title="Refresh status" secondary onPress={() => { setLoading(true); void refresh(); }} loading={loading} />
-      {failed || attempt >= 12 ? <ActionButton title="Try payment again" onPress={() => router.push({ pathname: '/checkout', params: { order_id: code, amount: status?.amount ? String(status.amount) : undefined } })} /> : null}
+      {failed || attempt >= 12 ? <ActionButton title="Try payment again" onPress={() => router.push({ pathname: '/checkout', params: { order_id: code } })} /> : null}
       <ActionButton title="Back to orders" secondary onPress={() => router.replace('/orders')} />
     </CustomerScreen>
   );

@@ -29,8 +29,8 @@ export function Field({ label, ...props }: TextInputProps & { label: string }) {
     <View style={styles.fieldWrap}>
       <Text style={styles.label}>{label}</Text>
       {isPasswordField ? (
-        <View style={[styles.input, styles.passwordInputWrap, props.style]}>
-          <TextInput placeholderTextColor={colors.muted} {...props} secureTextEntry={!passwordVisible} style={styles.passwordInput} />
+        <View style={[styles.input, styles.passwordInputWrap]}>
+          <TextInput placeholderTextColor={colors.muted} {...props} secureTextEntry={!passwordVisible} style={[styles.passwordInput, props.style]} />
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={passwordVisible ? 'Hide password' : 'Show password'}
@@ -67,6 +67,56 @@ export function SectionTitle({ children }: { children: ReactNode }) {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
   return <Text style={styles.sectionTitle}>{children}</Text>;
+}
+
+export type PaymentSummary = {
+  estimate_total: number | null;
+  final_total: number | null;
+  paid_amount: number;
+  overpaid_amount: number;
+  pending_amount: number;
+  remaining_amount: number;
+  payable_amount: number;
+  paid_percent: number;
+  price_finalized: boolean;
+};
+
+export function PaymentProgress({ summary }: { summary: PaymentSummary }) {
+  const { colors } = useAppTheme();
+  const percent = Math.max(0, Math.min(100, summary.paid_percent));
+  const amount = (value: number | null) => value == null ? 'Pending' : `KSh ${value.toLocaleString('en-KE')}`;
+  const row = (label: string, value: string, emphasized = false) => (
+    <View key={label} style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 12, marginTop: 10 }}>
+      <Text style={{ color: colors.textSecondary, fontSize: 12, flexShrink: 1 }}>{label}</Text>
+      <Text style={{ color: colors.text, fontSize: 12, fontWeight: emphasized ? '900' : '700', textAlign: 'right', flexShrink: 1 }}>{value}</Text>
+    </View>
+  );
+
+  return (
+    <View style={{ marginTop: 16, paddingTop: 14, borderTopWidth: 1, borderTopColor: colors.border }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+        <Text style={{ color: colors.text, fontSize: 15, fontWeight: '900' }}>Payment progress</Text>
+        <Text style={{ color: '#B45353', fontSize: 12, fontWeight: '900' }}>{percent}% paid</Text>
+      </View>
+      <View accessibilityRole="progressbar" accessibilityLabel="Order payment progress" accessibilityValue={{ min: 0, max: 100, now: percent }} style={{ height: 8, marginTop: 10, overflow: 'hidden', borderRadius: 8, backgroundColor: colors.border }}>
+        <View style={{ width: `${percent}%`, height: '100%', borderRadius: 8, backgroundColor: '#D98787' }} />
+      </View>
+      {row(summary.price_finalized ? 'Final total' : 'Estimated total', amount(summary.final_total))}
+      {row('Paid so far', amount(summary.paid_amount))}
+      {row('Remaining', amount(summary.remaining_amount), true)}
+      {summary.overpaid_amount > 0 ? row('Overpaid', amount(summary.overpaid_amount), true) : null}
+      {summary.pending_amount > 0 ? (
+        <Text style={{ marginTop: 9, color: colors.muted, fontSize: 11 }}>
+          {amount(summary.pending_amount)} awaiting payment confirmation.
+        </Text>
+      ) : null}
+      {!summary.price_finalized ? (
+        <Text style={{ marginTop: 9, color: '#A16207', fontSize: 11 }}>
+          This is an estimate; staff will confirm the final total.
+        </Text>
+      ) : null}
+    </View>
+  );
 }
 
 function createStyles(colors: (typeof Colors)[keyof typeof Colors]) {
