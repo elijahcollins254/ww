@@ -72,18 +72,33 @@ export function getServiceImageUrl(imageUrl?: string | null) {
 }
 
 export async function fetchServices(signal?: AbortSignal): Promise<Service[]> {
-  const response = await fetch(`${API_BASE_URL}/services/`, { signal });
-  if (!response.ok) {
-    throw new Error(`Services could not be loaded (${response.status}).`);
+  let url: string | null = `${API_BASE_URL}/services/`;
+  const services: Service[] = [];
+
+  while (url) {
+    const response = await fetch(url, { signal });
+    if (!response.ok) {
+      throw new Error(`Services could not be loaded (${response.status}).`);
+    }
+
+    const payload: unknown = await response.json();
+    if (Array.isArray(payload)) {
+      services.push(...(payload as Service[]));
+      break;
+    }
+
+    if (payload && typeof payload === 'object' && 'results' in payload) {
+      const page = payload as { results?: unknown; next?: string | null };
+      if (!Array.isArray(page.results)) {
+        throw new Error('The services response had an unexpected format.');
+      }
+      services.push(...(page.results as Service[]));
+      url = page.next ?? null;
+      continue;
+    }
+
+    throw new Error('The services response had an unexpected format.');
   }
 
-  const payload: unknown = await response.json();
-  if (Array.isArray(payload)) return payload as Service[];
-
-  if (payload && typeof payload === 'object' && 'results' in payload) {
-    const results = (payload as { results?: unknown }).results;
-    if (Array.isArray(results)) return results as Service[];
-  }
-
-  throw new Error('The services response had an unexpected format.');
+  return services;
 }
