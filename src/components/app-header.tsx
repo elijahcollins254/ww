@@ -14,7 +14,6 @@ const mobileApps = [
   // { label: 'Profile', short: 'P', path: '/profile', color: '#F97316' },
   // { label: 'Services', short: 'S', path: '/services', color: '#0F766E' },
   { label: 'Offers', short: '%', path: '/offers', color: '#DB2777' },
-  { label: 'Trade in', short: 'T', path: '/tradein', color: '#16A34A' },
   { label: 'Contact', short: '?', path: '/contact', color: '#475569' },
 ];
   

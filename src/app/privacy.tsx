@@ -8,11 +8,11 @@ const sections: Array<[string, string, string[]?]> = [
     'Account and contact details, including username, name, phone number, email address, password credentials, and service location.',
     'Pickup and service details, including an address or coordinates you choose to provide, order history, selected services, item descriptions, quantities, weights, notes, and delivery preferences.',
     'Payment details such as amount, status, phone number used to start payment, and transaction references. Your M-Pesa PIN is entered with the payment provider and is not requested by Wild Wash in the app.',
-    'Trade-in descriptions and estimated values, contact phone number, and preferences for optional subscriptions or offer messages.',
+    'Preferences for optional subscriptions or offer messages.',
     'If you choose Google sign-in, profile details returned for authentication, such as name, email address, and Google account identifier.',
     'Technical request information that may be available to service providers, such as IP address, request time, and device, operating system, or app information used for security and troubleshooting.',
   ]],
-  ['How we use information', 'We use information to create and secure accounts; provide pickups, cleaning, delivery, order tracking, and support; process payments; administer trade-ins; send service, payment, and account messages; manage subscriptions and optional offer messages; prevent misuse; resolve disputes; meet legal obligations; and maintain and improve our services.'],
+  ['How we use information', 'We use information to create and secure accounts; provide pickups, cleaning, delivery, order tracking, and support; process payments; send service, payment, and account messages; manage subscriptions and optional offer messages; prevent misuse; resolve disputes; meet legal obligations; and maintain and improve our services.'],
   ['How information is shared', 'We do not sell personal information. We share it only as needed for the purposes in this policy, including with:', [
     'Wild Wash personnel, service providers, and assigned pickup or delivery personnel who need information to provide a requested service.',
     'Payment providers, including M-Pesa/Safaricom where applicable, to initiate and confirm payments. Their own privacy terms apply to information they collect directly.',
