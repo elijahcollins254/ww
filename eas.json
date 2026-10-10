@@ -6,12 +6,20 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_API_BASE_URL": "https://api.wildwash.co.ke",
+        "EXPO_PUBLIC_GOOGLE_CLIENT_ID": "283605479725-mnudc790j0pb2sv37bbn21re7bnrd51m.apps.googleusercontent.com"
+      }
     },
     "preview": {
       "distribution": "internal",
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_BASE_URL": "https://api.wildwash.co.ke",
+        "EXPO_PUBLIC_GOOGLE_CLIENT_ID": "283605479725-mnudc790j0pb2sv37bbn21re7bnrd51m.apps.googleusercontent.com"
       }
     },
     "production": {
@@ -20,6 +28,10 @@
         "buildArtifactPaths": [
           "android/app/build/outputs/mapping/release/mapping.txt"
         ]
+      },
+      "env": {
+        "EXPO_PUBLIC_API_BASE_URL": "https://api.wildwash.co.ke",
+        "EXPO_PUBLIC_GOOGLE_CLIENT_ID": "283605479725-mnudc790j0pb2sv37bbn21re7bnrd51m.apps.googleusercontent.com"
       }
     }
   },

@@ -107,10 +107,8 @@ export default function ProfileScreen() {
       {message ? <Notice>{message}</Notice> : null}
       <ActionButton title="Save profile" onPress={save} loading={saving || loading} />
       <SectionTitle>Account</SectionTitle>
-      <Link href="/bnpl" asChild><Text style={{ paddingVertical: 13, color: colors.primary, fontWeight: '800' }}>Buy now, pay later</Text></Link>
       <Link href="/orders" asChild><Text style={{ paddingVertical: 13, color: colors.primary, fontWeight: '800' }}>Your orders</Text></Link>
       <Link href="/offers" asChild><Text style={{ paddingVertical: 13, color: colors.primary, fontWeight: '800' }}>Browse offers</Text></Link>
-      <Link href="/loans" asChild><Text style={{ paddingVertical: 13, color: colors.primary, fontWeight: '800' }}>My loan applications</Text></Link>
       <Link href="/tradein" asChild><Text style={{ paddingVertical: 13, color: colors.primary, fontWeight: '800' }}>My trade-ins</Text></Link>
       <Link href="/privacy" asChild><Text style={{ paddingVertical: 13, color: colors.primary, fontWeight: '800' }}>Privacy Policy</Text></Link>
       <View style={{ height: 1, marginTop: 8, backgroundColor: colors.border }} />

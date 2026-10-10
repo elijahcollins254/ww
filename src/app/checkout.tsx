@@ -6,9 +6,9 @@ import { ActionButton, CustomerScreen, Field, Notice, PaymentProgress, SectionTi
 import { apiRequest } from '@/lib/api';
 import { useAppTheme } from '@/contexts/theme-context';
 
-type Method = 'mpesa' | 'bnpl' | 'tradein' | 'gift';
+type Method = 'mpesa' | 'tradein' | 'gift';
 const methods: { key: Method; label: string }[] = [
-  { key: 'mpesa', label: 'M-Pesa' }, { key: 'bnpl', label: 'BNPL' }, { key: 'tradein', label: 'Trade-in' }, { key: 'gift', label: 'Gift' },
+  { key: 'mpesa', label: 'M-Pesa' }, { key: 'tradein', label: 'Trade-in' }, { key: 'gift', label: 'Gift' },
 ];
 
 type OrderSummaryResult = { code: string; payment_summary?: PaymentSummary };
@@ -108,15 +108,6 @@ export default function CheckoutScreen() {
         router.replace(`/orders/${encodeURIComponent(orderId)}/payment-status` as never);
         return;
       }
-      if (method === 'bnpl') {
-        const status = await apiRequest<{ is_enrolled: boolean; is_active?: boolean; credit_limit: number; current_balance: number }>('/payments/bnpl/status/');
-        if (!status.is_enrolled || status.is_active === false) throw new Error('Enroll in BNPL and activate your account before using it.');
-        const available = status.credit_limit - status.current_balance;
-        if (numericAmount > available) throw new Error(`The order is above your available credit of KSh ${available.toLocaleString('en-KE')}.`);
-        await apiRequest('/payments/bnpl/process/', { method: 'POST', body: JSON.stringify({ order_id: orderId, amount: numericAmount }) });
-        router.replace(`/orders/${encodeURIComponent(orderId)}/payment-status` as never);
-        return;
-      }
       if (method === 'tradein') {
         if (!tradeDescription.trim() || !Number(tradePrice)) throw new Error('Describe the item and enter its estimated value.');
         await apiRequest('/payments/tradein/', { method: 'POST', body: JSON.stringify({ description: tradeDescription, estimated_price: Number(tradePrice), contact_phone: phone }) });
@@ -145,10 +136,9 @@ export default function CheckoutScreen() {
         {methods.map(({ key, label }) => <Pressable key={key} accessibilityRole="radio" accessibilityState={{ selected: method === key }} onPress={() => setMethod(key)} style={{ paddingHorizontal: 14, paddingVertical: 10, backgroundColor: method === key ? colors.primary : colors.surface, borderWidth: 1, borderColor: method === key ? colors.primary : colors.border, borderRadius: 4 }}><Text style={{ color: method === key ? '#FFFFFF' : colors.text, fontSize: 12, fontWeight: '800' }}>{label}</Text></Pressable>)}
       </View>
       {method === 'tradein' ? <><Field label="Trade-in item description" value={tradeDescription} onChangeText={setTradeDescription} multiline placeholder="Describe item condition and details" /><Field label="Estimated value (KES)" value={tradePrice} onChangeText={setTradePrice} keyboardType="decimal-pad" /></> : null}
-      {method === 'bnpl' ? <Notice>BNPL requires an active account and enough available credit. Manage enrollment in your profile.</Notice> : null}
       {error ? <Notice error>{error}</Notice> : null}
       {message ? <Notice>{message}</Notice> : null}
-      <ActionButton title={method === 'mpesa' ? 'Send M-Pesa prompt' : method === 'bnpl' ? 'Pay with BNPL' : method === 'tradein' ? 'Submit trade-in' : 'Continue with gift'} onPress={submit} loading={loading} disabled={!paymentSummary || summaryOrderCode !== orderId || paymentSummary.payable_amount <= 0} />
+      <ActionButton title={method === 'mpesa' ? 'Send M-Pesa prompt' : method === 'tradein' ? 'Submit trade-in' : 'Continue with gift'} onPress={submit} loading={loading} disabled={!paymentSummary || summaryOrderCode !== orderId || paymentSummary.payable_amount <= 0} />
       <ActionButton title="Back to orders" secondary onPress={() => router.push('/orders')} />
     </CustomerScreen>
   );

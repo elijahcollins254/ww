@@ -12,15 +12,10 @@ const mobileApps = [
   // { label: 'Your orders', short: 'O', path: '/orders', color: '#16A34A' },
   // { label: 'Your cart', short: 'C', path: '/cart', color: '#3B82F6' },
   // { label: 'Profile', short: 'P', path: '/profile', color: '#F97316' },
-  { label: 'BNPL', short: 'B', path: '/bnpl', color: '#8B5CF6' },
   // { label: 'Services', short: 'S', path: '/services', color: '#0F766E' },
   { label: 'Offers', short: '%', path: '/offers', color: '#DB2777' },
-  { label: 'My loans', short: 'L', path: '/loans', color: '#2563EB' },
-  { label: 'Borrow', short: '+', path: '/borrow', color: '#7C3AED' },
   { label: 'Trade in', short: 'T', path: '/tradein', color: '#16A34A' },
-  // { label: 'Payments', short: '$', path: '/financing', color: '#B45309' },
   { label: 'Contact', short: '?', path: '/contact', color: '#475569' },
-  // { label: 'BNPL guide', short: 'i', path: '/help-bnpl', color: '#9333EA' },
 ];
   
 export default function AppHeader() {
