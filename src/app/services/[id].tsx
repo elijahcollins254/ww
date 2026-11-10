@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocalSearchParams, router } from 'expo-router';
 import { Image } from 'expo-image';
 import { Pressable, ScrollView, Text, View } from 'react-native';
@@ -17,6 +17,9 @@ export default function ServiceDetailScreen() {
   const [services, setServices] = useState<Service[]>([]);
   const [relatedServicesError, setRelatedServicesError] = useState('');
   const [relatedServicesLoading, setRelatedServicesLoading] = useState(true);
+  const [pauseRelatedAutoscroll, setPauseRelatedAutoscroll] = useState(false);
+  const relatedCarouselRef = useRef<ScrollView>(null);
+  const relatedScrollPosition = useRef(0);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -43,20 +46,38 @@ export default function ServiceDetailScreen() {
     return () => controller.abort();
   }, [id]);
 
+  const otherServices = service ? services.filter((item) => item.id !== service.id) : [];
+  const sameCategoryServices = service
+    ? otherServices.filter((item) => item.category === service.category)
+    : [];
+  const relatedServices = (sameCategoryServices.length > 0 ? sameCategoryServices : otherServices).slice(0, 8);
+
+  useEffect(() => {
+    if (relatedServices.length === 0 || relatedServicesLoading || relatedServicesError || pauseRelatedAutoscroll) return;
+
+    const cardStep = 242;
+    const interval = setInterval(() => {
+      const nextPosition = relatedScrollPosition.current + cardStep;
+      if (nextPosition >= relatedServices.length * cardStep) {
+        relatedScrollPosition.current = 0;
+        relatedCarouselRef.current?.scrollTo({ x: 0, animated: false });
+      } else {
+        relatedScrollPosition.current = nextPosition;
+        relatedCarouselRef.current?.scrollTo({ x: nextPosition, animated: true });
+      }
+    }, 3200);
+
+    return () => clearInterval(interval);
+  }, [relatedServices.length, relatedServicesError, relatedServicesLoading, pauseRelatedAutoscroll]);
+
   if (!service) return <CustomerScreen title="Service details">{error ? <Notice error>{error}</Notice> : <Notice>Loading service…</Notice>}</CustomerScreen>;
   const imageUrl = getServiceImageUrl(service.image_url);
-  const otherServices = services.filter((item) => item.id !== service.id);
-  const sameCategoryServices = otherServices.filter((item) => item.category === service.category);
-  const relatedServices = (sameCategoryServices.length > 0 ? sameCategoryServices : otherServices).slice(0, 8);
 
   return (
     <CustomerScreen title={service.name} subtitle={(service.category || 'Service').replaceAll('-', ' ')}>
       {imageUrl ? <Image source={{ uri: imageUrl }} contentFit="cover" style={{ width: '100%', height: 250, borderRadius: 5, backgroundColor: colors.image }} /> : null}
       <Text style={{ marginTop: 18, color: colors.text, fontSize: 22, fontWeight: '900' }}>KSh {Number(service.price).toLocaleString('en-KE')}</Text>
       <Text style={{ marginTop: 12, color: colors.textSecondary, fontSize: 14, lineHeight: 21 }}>{service.description || 'Professional Wild Wash service.'}</Text>
-      <View style={{ marginTop: 20, padding: 15, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 5 }}>
-        {['Professional service', 'Quality guaranteed', 'Pickup and delivery available'].map((item) => <Text key={item} style={{ paddingVertical: 5, color: colors.text }}>✓  {item}</Text>)}
-      </View>
       <ActionButton title="Add to cart" onPress={() => addItem(service)} />
       <Pressable onPress={() => router.push('/cart')} style={{ padding: 14, alignItems: 'center' }}><Text style={{ color: colors.primary, fontWeight: '800' }}>View cart</Text></Pressable>
 
@@ -68,11 +89,21 @@ export default function ServiceDetailScreen() {
         ) : relatedServicesError ? (
           <Notice error>{relatedServicesError}</Notice>
         ) : relatedServices.length > 0 ? (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingBottom: 8 }}>
-            {relatedServices.map((relatedService) => {
+          <ScrollView
+            ref={relatedCarouselRef}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            scrollEventThrottle={16}
+            onTouchStart={() => setPauseRelatedAutoscroll(true)}
+            onTouchEnd={() => setPauseRelatedAutoscroll(false)}
+            onScroll={(event) => {
+              relatedScrollPosition.current = event.nativeEvent.contentOffset.x;
+            }}
+            contentContainerStyle={{ gap: 12, paddingBottom: 8 }}>
+            {[...relatedServices, ...relatedServices].map((relatedService, index) => {
               const relatedImageUrl = getServiceImageUrl(relatedService.image_url);
               return (
-                <View key={relatedService.id} style={{ width: 230, overflow: 'hidden', borderWidth: 1, borderColor: colors.border, borderRadius: 5, backgroundColor: colors.card }}>
+                <View key={`${relatedService.id}-${index}`} style={{ width: 230, overflow: 'hidden', borderWidth: 1, borderColor: colors.border, borderRadius: 5, backgroundColor: colors.card }}>
                   <Pressable onPress={() => router.push(`/services/${relatedService.id}` as never)}>
                     {relatedImageUrl ? (
                       <Image source={{ uri: relatedImageUrl }} contentFit="cover" style={{ width: '100%', height: 140, backgroundColor: colors.image }} />
