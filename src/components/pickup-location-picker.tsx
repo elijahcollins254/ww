@@ -18,7 +18,7 @@ export default function PickupLocationPicker({ position, onChange }: PickupLocat
   const [locating, setLocating] = useState(false);
   const [error, setError] = useState('');
 
-  const useCurrentLocation = async () => {
+  const locateCurrentLocation = async () => {
     setLocating(true);
     setError('');
     try {
@@ -46,7 +46,7 @@ export default function PickupLocationPicker({ position, onChange }: PickupLocat
         <Pressable
           accessibilityRole="button"
           disabled={locating}
-          onPress={() => void useCurrentLocation()}
+          onPress={() => void locateCurrentLocation()}
           style={{ paddingHorizontal: 12, paddingVertical: 9, borderRadius: 6, backgroundColor: colors.primary, opacity: locating ? 0.6 : 1 }}>
           <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '800' }}>{locating ? 'Finding location…' : 'Use my location'}</Text>
         </Pressable>

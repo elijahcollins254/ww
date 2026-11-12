@@ -45,7 +45,7 @@ Pickup booking and the profile screen support tapping the map or dragging a pin,
 and can use the device's current location after permission is granted. Coordinates
 are saved with the user profile and sent with each booking. Android and iOS use
 `react-native-maps`; the Expo web build uses Google Maps JavaScript. The Next.js
-site uses OpenStreetMap tiles and does not need a Google Maps key.
+site also uses Google Maps JavaScript.
 
 Create separate Google Maps API keys in the Google Cloud project and restrict
 each one to its app and API:
@@ -55,6 +55,10 @@ each one to its app and API:
 - iOS: restrict by iOS app (`com.kibeezy.ww`) and allow **Maps SDK for iOS**.
 - Expo web: restrict by the website HTTP referrers and allow **Maps JavaScript
   API**.
+- Next.js web: create a separate browser key, restrict by the Next.js website's
+  HTTP referrers, and allow **Maps JavaScript API**. Set it as
+  `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` in `wildwash/.env` and the Next.js hosting
+  environment.
 
 For local development, put these entries in `ww/.env` (do not commit the keys):
 

@@ -5,6 +5,7 @@ import { Pressable, Text, View } from 'react-native';
 import { ActionButton, CustomerScreen, Field, Notice, SectionTitle } from '@/components/customer-ui';
 import PickupLocationPicker from '@/components/pickup-location-picker';
 import { apiRequest, clearAuthState, getAuthState, type UserProfile } from '@/lib/api';
+import { roundPickupPosition } from '@/lib/coordinates';
 import { useAppTheme } from '@/contexts/theme-context';
 
 type Location = { id: number; name: string; description?: string };
@@ -47,11 +48,14 @@ export default function ProfileScreen() {
   }, []);
 
   const update = (key: keyof UserProfile, value: string | number | null) => setProfile((current) => ({ ...current, [key]: value }));
-  const updatePickupPosition = (position: [number, number] | null) => setProfile((current) => ({
-    ...current,
-    pickup_latitude: position?.[0] ?? null,
-    pickup_longitude: position?.[1] ?? null,
-  }));
+  const updatePickupPosition = (position: [number, number] | null) => {
+    const roundedPosition = position ? roundPickupPosition(position) : null;
+    setProfile((current) => ({
+      ...current,
+      pickup_latitude: roundedPosition?.[0] ?? null,
+      pickup_longitude: roundedPosition?.[1] ?? null,
+    }));
+  };
   const save = async () => {
     setSaving(true);
     setError('');

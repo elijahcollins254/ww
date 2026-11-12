@@ -7,6 +7,7 @@ import PickupLocationPicker from '@/components/pickup-location-picker';
 import { Colors } from '@/constants/theme';
 import { useCart } from '@/contexts/cart-context';
 import { apiRequest } from '@/lib/api';
+import { roundPickupPosition } from '@/lib/coordinates';
 import { useAppTheme } from '@/contexts/theme-context';
 
 export default function BookingScreen() {
@@ -100,12 +101,16 @@ export default function BookingScreen() {
     }
     setLoading(true);
     setError('');
+    const roundedPickupPosition = pickupPosition ? roundPickupPosition(pickupPosition) : null;
     try {
       await apiRequest('/orders/', { method: 'POST', body: JSON.stringify({
         services: items.map(({ service }) => service.id),
         service_quantities: items.map(({ service, quantity }) => ({ service_id: service.id, quantity })),
         pickup_address: `${pickup} (contact: ${phone})`,
-        ...(pickupPosition ? { pickup_latitude: pickupPosition[0], pickup_longitude: pickupPosition[1] } : {}),
+        ...(roundedPickupPosition ? {
+          pickup_latitude: roundedPickupPosition[0],
+          pickup_longitude: roundedPickupPosition[1],
+        } : {}),
         dropoff_address: sameAddress ? pickup : dropoff,
         urgency: multiplier === 2 ? 3 : multiplier === 1.3 ? 2 : 1,
         items: totalCount,

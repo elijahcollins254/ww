@@ -54,5 +54,5 @@ export default function PickupMap({ position, hasPin, onChange }: PickupMapProps
 
 const styles = StyleSheet.create({
   container: { height: 260, width: '100%', overflow: 'hidden' },
-  map: { ...StyleSheet.absoluteFillObject },
+  map: { ...StyleSheet.absoluteFill },
 });

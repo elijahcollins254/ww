@@ -64,24 +64,29 @@ export default function PickupMap({ position, hasPin, onChange }: PickupMapProps
   const map = useRef<GoogleMap | null>(null);
   const marker = useRef<MapMarker | null>(null);
   const onChangeRef = useRef(onChange);
+  const positionRef = useRef(position);
+  const hasPinRef = useRef(hasPin);
   const [mapReady, setMapReady] = useState(false);
-  const [loadError, setLoadError] = useState('');
-
-  onChangeRef.current = onChange;
+  const [loadError, setLoadError] = useState(
+    GOOGLE_MAPS_API_KEY ? '' : 'Set EXPO_PUBLIC_GOOGLE_MAPS_WEB_API_KEY to enable the map in web builds.',
+  );
 
   useEffect(() => {
-    if (!GOOGLE_MAPS_API_KEY) {
-      setLoadError('Set EXPO_PUBLIC_GOOGLE_MAPS_WEB_API_KEY to enable the map in web builds.');
-      return;
-    }
+    onChangeRef.current = onChange;
+    positionRef.current = position;
+    hasPinRef.current = hasPin;
+  }, [onChange, position, hasPin]);
+
+  useEffect(() => {
+    if (!GOOGLE_MAPS_API_KEY) return;
 
     let active = true;
     let clickListener: { remove: () => void } | undefined;
     loadGoogleMaps().then(() => {
       if (!active || !element.current || !window.google?.maps) return;
       map.current = new window.google.maps.Map(element.current, {
-        center: { lat: position[0], lng: position[1] },
-        zoom: hasPin ? 16 : 12,
+        center: { lat: positionRef.current[0], lng: positionRef.current[1] },
+        zoom: hasPinRef.current ? 16 : 12,
         mapTypeControl: false,
         streetViewControl: false,
         fullscreenControl: false,
