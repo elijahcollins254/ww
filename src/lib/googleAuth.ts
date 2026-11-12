@@ -1,11 +1,29 @@
 import * as AuthSession from 'expo-auth-session';
+import * as WebBrowser from 'expo-web-browser';
+import { Platform } from 'react-native';
 
 import { apiRequest, saveAuthState, type UserProfile } from '@/lib/api';
+
+WebBrowser.maybeCompleteAuthSession();
 
 const GOOGLE_DISCOVERY = {
   authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
   tokenEndpoint: 'https://oauth2.googleapis.com/token',
 };
+
+function getGoogleClientId() {
+  const clientId = Platform.select({
+    android: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
+    ios: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+    web: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+  }) || process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID;
+
+  if (!clientId) {
+    throw new Error('Set the platform-specific EXPO_PUBLIC_GOOGLE_*_CLIENT_ID for Google sign-in.');
+  }
+
+  return clientId;
+}
 
 export function getGoogleRedirectPath(user?: Partial<UserProfile> & { role?: string; is_staff?: boolean; is_superuser?: boolean; profile_complete?: boolean }) {
   if (!user) return '/';
@@ -21,49 +39,37 @@ export function getGoogleRedirectPath(user?: Partial<UserProfile> & { role?: str
 }
 
 export async function signInWithGoogle() {
-  const clientId = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID;
-
-  if (!clientId) {
-    throw new Error('Missing EXPO_PUBLIC_GOOGLE_CLIENT_ID. Add your Google OAuth web client ID to the Expo .env file before using Google sign-in.');
-  }
-
+  const clientId = getGoogleClientId();
   const redirectUri = AuthSession.makeRedirectUri({ scheme: 'ww' });
   const request = new AuthSession.AuthRequest({
     clientId,
     redirectUri,
     scopes: ['openid', 'profile', 'email'],
     prompt: 'select_account',
-    responseType: 'token',
+    responseType: AuthSession.ResponseType.Code,
+    usePKCE: true,
   });
 
   const result = await request.promptAsync(GOOGLE_DISCOVERY, { useProxy: false });
 
-  if (result.type !== 'success' || !result.params.access_token) {
+  if (result.type !== 'success' || !result.params.code) {
     throw new Error(result.type === 'cancel' ? 'Google sign-in was cancelled.' : 'Google sign-in failed.');
   }
 
-  const profileResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
-    headers: { Authorization: `Bearer ${result.params.access_token}` },
-  });
+  const tokenResponse = await AuthSession.exchangeCodeAsync({
+    clientId,
+    code: result.params.code,
+    redirectUri,
+    extraParams: request.codeVerifier ? { code_verifier: request.codeVerifier } : {},
+  }, GOOGLE_DISCOVERY);
 
-  if (!profileResponse.ok) {
-    const errorText = await profileResponse.text().catch(() => '');
-    throw new Error(errorText || 'Unable to load your Google profile.');
+  if (!tokenResponse.idToken) {
+    throw new Error('Google did not return an ID token. Check the OAuth client configuration.');
   }
 
-  const googleProfile = await profileResponse.json() as { email?: string; name?: string; id?: string };
-
-  if (!googleProfile.email) {
-    throw new Error('Google did not return an email address for this account.');
-  }
-
-  const auth = await apiRequest<{ token: string; user: UserProfile }>('/users/google-auth/', {
+  const auth = await apiRequest<{ token: string; user: UserProfile }>('/users/google-auth/mobile/', {
     method: 'POST',
-    body: JSON.stringify({
-      email: googleProfile.email,
-      name: googleProfile.name || googleProfile.email.split('@')[0],
-      google_id: googleProfile.id || googleProfile.email,
-    }),
+    body: JSON.stringify({ id_token: tokenResponse.idToken }),
   });
 
   await saveAuthState(auth.token, auth.user);

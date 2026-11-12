@@ -3,6 +3,7 @@ import { Link, router } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 
 import { ActionButton, CustomerScreen, Field, Notice, SectionTitle } from '@/components/customer-ui';
+import PickupLocationPicker from '@/components/pickup-location-picker';
 import { apiRequest, clearAuthState, getAuthState, type UserProfile } from '@/lib/api';
 import { useAppTheme } from '@/contexts/theme-context';
 
@@ -46,6 +47,11 @@ export default function ProfileScreen() {
   }, []);
 
   const update = (key: keyof UserProfile, value: string | number | null) => setProfile((current) => ({ ...current, [key]: value }));
+  const updatePickupPosition = (position: [number, number] | null) => setProfile((current) => ({
+    ...current,
+    pickup_latitude: position?.[0] ?? null,
+    pickup_longitude: position?.[1] ?? null,
+  }));
   const save = async () => {
     setSaving(true);
     setError('');
@@ -101,8 +107,12 @@ export default function ProfileScreen() {
       </View>
       <Field label="Location (if not listed)" value={profile.location || ''} onChangeText={(value) => update('location', value)} />
       <Field label="Default pickup address" value={profile.pickup_address || ''} onChangeText={(value) => update('pickup_address', value)} multiline />
-      <Field label="Pickup latitude" value={profile.pickup_latitude == null ? '' : String(profile.pickup_latitude)} onChangeText={(value) => update('pickup_latitude', value)} keyboardType="decimal-pad" placeholder="Optional map coordinate" />
-      <Field label="Pickup longitude" value={profile.pickup_longitude == null ? '' : String(profile.pickup_longitude)} onChangeText={(value) => update('pickup_longitude', value)} keyboardType="decimal-pad" placeholder="Optional map coordinate" />
+      <PickupLocationPicker
+        position={profile.pickup_latitude != null && profile.pickup_longitude != null
+          ? [Number(profile.pickup_latitude), Number(profile.pickup_longitude)]
+          : null}
+        onChange={updatePickupPosition}
+      />
       {error ? <Notice error>{error}</Notice> : null}
       {message ? <Notice>{message}</Notice> : null}
       <ActionButton title="Save profile" onPress={save} loading={saving || loading} />

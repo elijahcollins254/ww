@@ -1,4 +1,4 @@
-import { useState } from 'react';
+`import { useState } from 'react';
 import { Link, router } from 'expo-router';
 import { Text } from 'react-native';
 

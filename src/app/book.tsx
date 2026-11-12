@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { Modal, Pressable, StyleSheet, Text, TextInput, View, type GestureResponderEvent, type LayoutChangeEvent } from 'react-native';
 
 import { ActionButton, CustomerScreen, Field, Notice, SectionTitle } from '@/components/customer-ui';
+import PickupLocationPicker from '@/components/pickup-location-picker';
 import { Colors } from '@/constants/theme';
 import { useCart } from '@/contexts/cart-context';
 import { apiRequest } from '@/lib/api';
@@ -13,6 +14,7 @@ export default function BookingScreen() {
   const styles = createStyles(colors);
   const { items, subtotal, clearCart } = useCart();
   const [pickup, setPickup] = useState('');
+  const [pickupPosition, setPickupPosition] = useState<[number, number] | null>(null);
   const [phone, setPhone] = useState('');
   const [dropoff, setDropoff] = useState('');
   const [sameAddress, setSameAddress] = useState(true);
@@ -29,10 +31,13 @@ export default function BookingScreen() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   useEffect(() => {
-    apiRequest<{ phone?: string; pickup_address?: string }>('/users/me/')
+    apiRequest<{ phone?: string; pickup_address?: string; pickup_latitude?: number | null; pickup_longitude?: number | null }>('/users/me/')
       .then((profile) => {
         setPhone(profile.phone || '');
         setPickup(profile.pickup_address || '');
+        if (profile.pickup_latitude != null && profile.pickup_longitude != null) {
+          setPickupPosition([Number(profile.pickup_latitude), Number(profile.pickup_longitude)]);
+        }
       })
       .catch(() => undefined);
   }, []);
@@ -100,6 +105,7 @@ export default function BookingScreen() {
         services: items.map(({ service }) => service.id),
         service_quantities: items.map(({ service, quantity }) => ({ service_id: service.id, quantity })),
         pickup_address: `${pickup} (contact: ${phone})`,
+        ...(pickupPosition ? { pickup_latitude: pickupPosition[0], pickup_longitude: pickupPosition[1] } : {}),
         dropoff_address: sameAddress ? pickup : dropoff,
         urgency: multiplier === 2 ? 3 : multiplier === 1.3 ? 2 : 1,
         items: totalCount,
@@ -122,6 +128,7 @@ export default function BookingScreen() {
       <SectionTitle>Pickup details</SectionTitle>
       <Field label="Pickup address" value={pickup} onChangeText={setPickup} placeholder="Building, street and area" multiline />
       <Field label="Contact phone" value={phone} onChangeText={setPhone} placeholder="0712345678" keyboardType="phone-pad" />
+      <PickupLocationPicker position={pickupPosition} onChange={setPickupPosition} />
       <SectionTitle>Delivery Time &amp; Price</SectionTitle>
       <View style={styles.deliveryBlock}>
         <View style={styles.deliveryHeading}>
